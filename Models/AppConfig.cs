@@ -14,7 +14,7 @@ namespace TornWarTracker.Models
         // Filters
         public bool ExcludeTraveling { get; set; } = false;
         public bool ExcludeAbroad { get; set; } = false;
-        public bool ExcludeOnline { get; set; } = false;
+        public bool ShowOnlineOnly { get; set; } = false;
 
         public int? MinLevel { get; set; }
         public int? MaxLevel { get; set; }

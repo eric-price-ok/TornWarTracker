@@ -22,7 +22,6 @@ namespace TornWarTracker.ViewModels
         private readonly FfScouterClient _ffScouter;
 
         private readonly DispatcherTimer _pollTimer = new();
-        private readonly DispatcherTimer _countdownTimer = new();
 
         private readonly Dictionary<int, MemberRowViewModel> _rowsById = new();
 
@@ -133,10 +132,10 @@ namespace TornWarTracker.ViewModels
             set { Config.ExcludeAbroad = value; OnPropertyChanged(); MembersView.Refresh(); }
         }
 
-        public bool ExcludeOnline
+        public bool ShowOnlineOnly
         {
-            get => Config.ExcludeOnline;
-            set { Config.ExcludeOnline = value; OnPropertyChanged(); MembersView.Refresh(); }
+            get => Config.ShowOnlineOnly;
+            set { Config.ShowOnlineOnly = value; OnPropertyChanged(); MembersView.Refresh(); }
         }
 
         public int? MinLevel
@@ -180,6 +179,7 @@ namespace TornWarTracker.ViewModels
         public RelayCommand SaveSettingsCommand { get; }
         public RelayCommand StartCommand { get; }
         public RelayCommand StopCommand { get; }
+        public RelayCommand PollNowCommand { get; }
         public RelayCommand ValidateApiKeyCommand { get; }
         public RelayCommand<MemberRowViewModel> CopyCallerCommand { get; }
         public RelayCommand<MemberRowViewModel> CopyClaimCommand { get; }
@@ -201,6 +201,7 @@ namespace TornWarTracker.ViewModels
             SaveSettingsCommand = new RelayCommand(_ => _configService.Save(Config));
             StartCommand = new RelayCommand(_ => Start(), _ => !IsRunning && HasRequiredSettings());
             StopCommand = new RelayCommand(_ => Stop(), _ => IsRunning);
+            PollNowCommand = new RelayCommand(_ => _ = PollAsync(), _ => IsRunning);
             ValidateApiKeyCommand = new RelayCommand(_ => _ = ValidateApiKeyAsync(), _ => !string.IsNullOrWhiteSpace(Config.TornApiKey));
             CopyCallerCommand = new RelayCommand<MemberRowViewModel>(row => CopyToClipboard(row?.CallerClipboardText));
             CopyClaimCommand = new RelayCommand<MemberRowViewModel>(row => CopyToClipboard(row?.ClaimClipboardText));
@@ -208,8 +209,11 @@ namespace TornWarTracker.ViewModels
             _pollTimer.Interval = TimeSpan.FromSeconds(Math.Max(5, Config.PollIntervalSeconds));
             _pollTimer.Tick += async (_, _) => await PollAsync();
 
-            _countdownTimer.Interval = TimeSpan.FromSeconds(1);
-            _countdownTimer.Tick += (_, _) => TickCountdowns();
+            // Auto-validate API key on startup if one is saved
+            if (!string.IsNullOrWhiteSpace(Config.TornApiKey))
+            {
+                _ = ValidateApiKeyAsync();
+            }
         }
 
         private bool HasRequiredSettings() =>
@@ -263,7 +267,6 @@ namespace TornWarTracker.ViewModels
             IsRunning = true;
             StatusMessage = "Looking for an active ranked war...";
             _pollTimer.Start();
-            _countdownTimer.Start();
             _ = PollAsync(); // don't wait for the first timer tick
         }
 
@@ -271,7 +274,6 @@ namespace TornWarTracker.ViewModels
         {
             IsRunning = false;
             _pollTimer.Stop();
-            _countdownTimer.Stop();
             StatusMessage = "Stopped.";
         }
 
@@ -336,23 +338,13 @@ namespace TornWarTracker.ViewModels
             MembersView.Refresh();
         }
 
-        private void TickCountdowns()
-        {
-            foreach (var row in Members)
-                row.RefreshCountdown();
-
-            // A hospital timer expiring can change whether a row still
-            // passes the current filters, so keep the view honest every tick.
-            MembersView.Refresh();
-        }
-
         private bool FilterPredicate(object obj)
         {
             if (obj is not MemberRowViewModel row) return false;
 
             if (ExcludeTraveling && row.IsTraveling) return false;
             if (ExcludeAbroad && row.IsAbroad) return false;
-            if (ExcludeOnline && row.IsOnline) return false;
+            if (ShowOnlineOnly && !row.IsOnline) return false;
 
             if (MinLevel.HasValue && row.Level < MinLevel.Value) return false;
             if (MaxLevel.HasValue && row.Level > MaxLevel.Value) return false;

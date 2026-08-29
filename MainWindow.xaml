@@ -56,8 +56,11 @@
                 <StackPanel Orientation="Vertical" VerticalAlignment="Bottom" Margin="0,0,8,0">
                     <Button Content="Start" Command="{Binding StartCommand}" Padding="14,4"/>
                 </StackPanel>
-                <StackPanel Orientation="Vertical" VerticalAlignment="Bottom">
+                <StackPanel Orientation="Vertical" VerticalAlignment="Bottom" Margin="0,0,8,0">
                     <Button Content="Stop" Command="{Binding StopCommand}" Padding="14,4"/>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" VerticalAlignment="Bottom">
+                    <Button Content="Poll Now" Command="{Binding PollNowCommand}" Padding="10,4"/>
                 </StackPanel>
             </StackPanel>
         </GroupBox>
@@ -67,7 +70,7 @@
             <StackPanel Orientation="Horizontal" Margin="4">
                 <CheckBox Content="Exclude Traveling" IsChecked="{Binding ExcludeTraveling}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <CheckBox Content="Exclude Abroad" IsChecked="{Binding ExcludeAbroad}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                <CheckBox Content="Exclude Online" IsChecked="{Binding ExcludeOnline}" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                <CheckBox Content="Show Online Only" IsChecked="{Binding ShowOnlineOnly}" VerticalAlignment="Center" Margin="0,0,20,0"/>
 
                 <TextBlock Text="Level" VerticalAlignment="Center" Margin="0,0,4,0"/>
                 <TextBox Width="45" Text="{Binding MinLevel, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
@@ -93,7 +96,7 @@
                 <DataGridTextColumn Header="Level" Binding="{Binding Level}" Width="55"/>
                 <DataGridTextColumn Header="FF" Binding="{Binding FairFight, StringFormat={}{0:0.00}}" Width="55"/>
                 <DataGridTextColumn Header="Est. Stats" Binding="{Binding StatEstimateDisplay}" Width="90"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding StatusDisplay}" Width="180"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding StatusDisplay}" SortMemberPath="HospitalMinutesRemaining" Width="180"/>
                 <DataGridTextColumn Header="Last Action" Binding="{Binding LastActionDisplay}" Width="120"/>
                 <DataGridTemplateColumn Header="Copy" Width="70">
                     <DataGridTemplateColumn.CellTemplate>

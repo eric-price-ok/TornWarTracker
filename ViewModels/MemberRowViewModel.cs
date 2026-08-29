@@ -49,6 +49,20 @@ namespace TornWarTracker.ViewModels
         }
 
         public bool IsHospitalized => ClipboardTextBuilder.IsHospitalized(Member, out _);
+
+        /// <summary>
+        /// Minutes remaining in hospital, or int.MaxValue if not hospitalized.
+        /// Used for proper numeric sorting of hospital times.
+        /// </summary>
+        public int HospitalMinutesRemaining
+        {
+            get
+            {
+                if (ClipboardTextBuilder.IsHospitalized(Member, out var mins))
+                    return mins;
+                return int.MaxValue; // Not hospitalized sorts to end
+            }
+        }
         public bool IsTraveling => string.Equals(Member.Status.State, "Traveling", StringComparison.OrdinalIgnoreCase);
         public bool IsAbroad => string.Equals(Member.Status.State, "Abroad", StringComparison.OrdinalIgnoreCase);
         public bool IsOnline => string.Equals(Member.LastAction.Status, "Online", StringComparison.OrdinalIgnoreCase);
